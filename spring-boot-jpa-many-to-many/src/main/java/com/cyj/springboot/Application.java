@@ -6,7 +6,7 @@ import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 /**
- * Spring Boot 应用启动类
+ * Spring Boot 应用启动类 
  * 
  * @Description: 主模块
  * @ClassName: Application.java
