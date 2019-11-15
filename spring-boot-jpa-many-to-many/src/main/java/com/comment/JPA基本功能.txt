@@ -1,0 +1,354 @@
+JpaRepository 所提供的基本功能 
+.1 CrudRepository<T, ID extends Serializable>： 
+这个接口提供了最基本的对实体类的添删改查操作 
+T save(T entity);//保存单个实体 
+        Iterable<T> save(Iterable<? extends T> entities);//保存集合 
+        T findOne(ID id);//根据id查找实体 
+        boolean exists(ID id);//根据id判断实体是否存在 
+        Iterable<T> findAll();//查询所有实体,不用或慎用! 
+        long count();//查询实体数量 
+        void delete(ID id);//根据Id删除实体 
+        void delete(T entity);//删除一个实体 
+void delete(Iterable<? extends T> entities);//删除一个实体的集合 
+        void deleteAll();//删除所有实体,不用或慎用! 
+.2 PagingAndSortingRepository<T, ID extends Serializable> 
+这个接口提供了分页与排序功能 
+Iterable<T> findAll(Sort sort);//排序 
+        Page<T> findAll(Pageable pageable);//分页查询（含排序功能） 
+.3 JpaRepository<T, ID extends Serializable> 
+这个接口提供了JPA的相关功能 
+List<T> findAll();//查找所有实体 
+        List<T> findAll(Sort sort);//排序 查找所有实体 
+        List<T> save(Iterable<? extends T> entities);//保存集合 
+        void flush();//执行缓存与数据库同步 
+        T saveAndFlush(T entity);//强制执行持久化 
+void deleteInBatch(Iterable<T> entities);//删除一个实体集合 
+
+
+
+
+*********************************常用查询:*********************************************
+    //And --- 等价于 SQL 中的 and 关键字，比如 findByHeightAndSex(int height,char sex)；  
+     public List<User> findByHeightAndSex(int height,char sex);  
+      
+    // Or --- 等价于 SQL 中的 or 关键字，比如 findByHeightOrSex(int height,char sex)；  
+     public List<User> findByHeightOrSex(int height,char sex);  
+      
+     //Between --- 等价于 SQL 中的 between 关键字，比如 findByHeightBetween(int min, int max)；  
+     public List<User> findByHeightBetween(int min,int max);  
+      
+     //LessThan --- 等价于 SQL 中的 "<"，比如 findByHeightLessThan(int max)；  
+     public List<User> findByHeightLessThan(int max);  
+      
+     //GreaterThan --- 等价于 SQL 中的">"，比如 findByHeightGreaterThan(int min)；  
+     public List<User> findByHeightGreaterThan(int min);  
+      
+     //IsNull --- 等价于 SQL 中的 "is null"，比如 findByNameIsNull()；  
+     public List<User> findByNameIsNull();  
+      
+     //IsNotNull --- 等价于 SQL 中的 "is not null"，比如 findByNameIsNotNull()；  
+     public List<User> findByNameIsNotNull();  
+      
+     //NotNull --- 与 IsNotNull 等价；  
+     public List<User> findByNameNotNull();  
+      
+     //Like --- 等价于 SQL 中的 "like"，比如 findByNameLike(String name);  
+     public List<User> findByNameLike(String name);  
+      
+     //NotLike --- 等价于 SQL 中的 "not like"，比如 findByNameNotLike(String name)；  
+     public List<User> findByNameNotLike(String name);  
+      
+     //OrderBy --- 等价于 SQL 中的 "order by"，比如 findByNameNotNullOrderByHeightAsc()；  
+     public List<User>findByNameNotNullOrderByHeightAsc();  
+      
+     //Not --- 等价于 SQL 中的 "！ ="，比如 findByNameNot(String name)；  
+     public List<User> findByNameNot(String name);  
+      
+     //In --- 等价于 SQL 中的 "in"，比如 findByNameIN(String name);  
+     public List<User> findByNameIn(String name);  
+      
+     //NotIn --- 等价于 SQL 中的 "not in"，比如 findByNameNotIN(String name);  
+     public List<User> findByNameNotIn(String name);  
+
+[java] view plain copy
+
+     //And --- 等价于 SQL 中的 and 关键字，比如 findByHeightAndSex(int height,char sex)；  
+     public List<User> findByHeightAndSex(int height,char sex);  
+      
+    // Or --- 等价于 SQL 中的 or 关键字，比如 findByHeightOrSex(int height,char sex)；  
+     public List<User> findByHeightOrSex(int height,char sex);  
+      
+     //Between --- 等价于 SQL 中的 between 关键字，比如 findByHeightBetween(int min, int max)； 
+     
+     
+     
+     
+     **************************一些复杂查询***********************
+     一些比较复杂的关联查询要怎么实现呢，JPA的处理方法是：利用原生的SQl命令来实现那些复杂的关联查询，下面就来看下案例。
+     
+     
+     //利用原生的SQL进行查询操作 
+  @Query(value = "select o.* from orders o ,user u where o.uid=u.id and u.name=?1", nativeQuery = true) 
+  @Modifying
+  public List<Order> findOrderByName(String name); 
+  
+  //利用原生的SQL进行删除操作 
+  @Query(value = "delete from orders where id=?1 ", nativeQuery = true) 
+  @Modifying
+  public void deleteOrderById(int id); 
+  
+  //利用原生的SQL进行删除操作 
+  @Query(value = "delete from orders where uid=?1 ", nativeQuery = true) 
+  @Modifying
+  public void deleteOrderByUId(int uid); 
+  
+  //利用原生的SQL进行修改操作 
+  @Query(value = "update orders set name=?1 where id=?2 ", nativeQuery = true) 
+  @Modifying
+  public void updateOrderName(String name,int id); 
+  
+  //利用原生的SQL进行插入操作 
+  @Query(value = "insert into orders(name,uid) value(?1,?2)", nativeQuery = true) 
+  @Modifying
+  public void insertOrder(String name,int uid); 
+  
+  
+  
+  *******************JPA分页*******************************
+  JPA是怎么实现分页的效果，其实JPA脱胎于hibernate，所以本身就对分页功能有很好的支持。
+  
+  
+  //实现分页功能 
+Page<User> findByNameNot(String name,Pageable pageable);
+	
+@RequestMapping(value = "/params", method= RequestMethod.GET) 
+  @ResponseBody
+  public String getEntryByParams(@RequestParam(value = "name", defaultValue = "林志强") String name, @RequestParam(value = "page", defaultValue = "0") Integer page, @RequestParam(value = "size", defaultValue = "15") Integer size) { 
+    Sort sort = new Sort(Sort.Direction.DESC, "id"); 
+    Pageable pageable = new PageRequest(page, size, sort); 
+    Page<User> pages=userDao.findByNameNot(name,pageable); 
+    Iterator<User> it=pages.iterator(); 
+    while(it.hasNext()){ 
+      System.out.println("value:"+((User)it.next()).getId()); 
+    } 
+    return "success...login...."; 
+  } 
+  
+  
+  
+  
+  上面的代码一个是在dao层中的，一个是在controller中的。
+
+dao层中添加一个返回值为Page，参数值为Pageable。controller层中通过实例化Pageable这个类，然后调用dao层这个分页方法。
+
+通过这些步骤就可以轻轻松松的实现分页的效果啦，看起来是不是特别方便。
+
+最后在给大家介绍一下JPA是如何实现事务操作的。其实因为SpringBoot中已经对事务做了很好的封装了，使用起来特别方便。下面看一下案例：
+
+
+@RequestMapping("/saveOrder") 
+@ResponseBody
+@Transactional() 
+public String saveOrder(){ 
+  Order o1=new Order("11",2); 
+  Order o2=new Order("22",2); 
+  Order o3=new Order("33",2); 
+  Order o4=new Order("44",2); 
+  orderDao.save(o1); 
+  orderDao.save(o2); 
+  orderDao.save(o3); 
+  orderDao.save(o4); 
+  return "successfull....saveOrder......"; 
+}
+
+只要在方法的上面加上@Transaction 这个注解就可以轻轻松松的实现事务的操作了，是不是特别方便啊。
+不过这里有几点需要注意的是：
+
+1.这个注解实现的事务管理器是默认的，如果不想要默认是事务管理器，可以自己进行添加，我这里就不多介绍了。
+
+2.事务的隔离级别也是可以自己设置的。
+
+3.事务的传播行为也是可以自己设置的。
+
+
+
+
+
+
+********************************************************************
+Spring Data Jpa提供了一些关键字的查询方法，查询相关文档得出：
+
+都需要以findBy开头，且方法中的字段名必须与实体类中的属性名一致，并遵循驼峰式代码编写风格
+
+And：等价于SQL中的and关键字，比如：findByUserNameAndPassword(String username, String pwd)；
+
+Or：等价于SQL中的or关键字，比如：findByUserNameOrEmail(String username, String email)；
+
+Between：等价于between关键字（介于两者之间），比如：findByAgeBetween(int max, int min)（获取age在max和min之间的数据）；
+
+LessThan：等价于<，比如：findByAgeLessThan(int val)（获取age小于val的数据）；
+
+GreaterThan:等价于>，比如：findByAgeGreaterThan(int val)（获取age大于val的数据）；
+
+IsNull：等价于is null，比如：findByEmailIsNull()（获取email为空的数据）；
+
+IsNotNull：等价于is not null，比如：findByEmailIsNotNull()（获取email不为空的数据）；
+
+NotNull：等价于IsNotNull；
+
+Like：等价于like，比如：findByUserNameLike(String val)（获取userName中包含val的数据，在传入val的时候可以在首尾处加上%）；
+
+NotLike：等价于not like，比如：findByUserNameNotLike(String val)（获取userName中不包含val的数据，在传入val的时候也可以在首尾处加上%）；
+
+Not：等价于!=，比如：findByUserNameNot(String val)（获取userName不等于val的数据）；
+
+In：等价于in，比如：findByUserNameIn(Collection<String> vals)或findByUserNameIn(String... vals)（获取userName在集合vals中的数据，参数类型可以是集合，也可以是数组，或不指定长度的数组）；
+
+NotIn：等价于not in，，比如：findByUserNameNotIn(Collection<String> vals)或findByUserNameNotIn(String... vals)（获取userName不在集合vals中的数据，参数类型可以是集合，也可以是数组，或不指定长度的数组）；
+
+OrderBy：等价于order by，比如：findByUserNameOrderByIdAsc(String userName)（Asc也可以换成Desc来更换排序方式）；
+
+
+
+******************************** HQL 方式 *******************
+
+以HQL方式获取数据
+
+前面介绍的获取数据的方式都没有使用到任何的HQL语句，那些方法已经可以满足很多需求，也有时候会觉得方法名太长不太方便，下面介绍一下使用Hql方式获取数据：
+
+在IUserService中加入 ：
+
+@Query("FROM User u WHERE u.userName=?1 AND u.password IS NOT NULL")
+List<User> findAll(String userName);
+
+测试方法：
+
+@Test
+public void testQuery() {
+    List<User> list = userService.findAll("user3");
+    System.out.println(list.size());
+}
+
+    修改数据
+
+在IUserService接口中写一个修改的方法，只要涉及修改或删除数据的操作都需要加上注释@Modifying和@Transcational（Transcational是org.springframework.transaction.annotation包中的不要导错了）
+
+@Query("UPDATE User u SET u.password=?2 WHERE u.userName=?1")
+@Modifying
+@Transactional
+void updatePwd(String userName, String pwd);
+
+测试方法：
+
+@Test
+public void testUpdate() {
+    userService.updatePwd("user1", "123456");
+}
+
+    删除数据
+
+在IUserService接口中的方法：
+
+@Query("DELETE FROM User u WHERE u.userName=?1")
+@Modifying
+@Transactional
+void deleteByUserName(String userName);
+
+测试方法：
+
+@Test
+public void testDelete() {
+    userService.deleteByUserName("user4");
+}
+
+在上面的操作方式中参数传递都是以一种有序的方式传递的，另外还有一种更为直观的方式来传递参数，下面举个例子说明：
+
+在接口IUserService中添加方法：
+
+@Query("UPDATE User u SET u.email= :email WHERE u.userName = :user")
+@Modifying
+@Transactional
+void updateEmail(@Param("user") String userName, @Param("email") String email);
+
+测试方法：
+
+@Test
+public void testUpdate2() {
+    userService.updateEmail("user2", "user2@qq.com");
+}
+
+注意： 在参数传中参数前加注释@Param并指定名称，在@Query中使用:名称的方式来传递参数。
+
+
+-------------------------------------------------------------------------------
+
+1.JpaRepository支持接口规范方法名查询。意思是如果在接口中定义的查询方法符合它的命名规则，就可以不用写实现，目前支持的关键字如下。
+
+Keyword 	Sample 	JPQL snippet
+IsNotNull 	findByAgeNotNull 	...  where x.age not null
+Like 	findByNameLike 	...  where x.name like ?1
+NotLike 	findByNameNotLike 	...  where x.name not like ?1
+StartingWith 	findByNameStartingWith 	...  where x.name like ?1(parameter bound with appended %)
+EndingWith 	findByNameEndingWith 	...  where x.name like ?1(parameter bound with prepended %)
+Containing 	findByNameContaining 	...  where x.name like ?1(parameter bound wrapped in %)
+OrderBy 	findByAgeOrderByName 	...  where x.age = ?1 order by x.name desc
+Not 	findByNameNot 	...  where x.name <> ?1
+In 	findByAgeIn 	...  where x.age in ?1
+NotIn 	findByAgeNotIn 	...  where x.age not in ?1
+True 	findByActiveTrue 	...  where x.avtive = true
+Flase 	findByActiveFalse 	...  where x.active = false
+And  	findByNameAndAge 	...  where x.name = ?1 and x.age = ?2
+Or 	findByNameOrAge 	...  where x.name = ?1 or x.age = ?2
+Between 	findBtAgeBetween 	...  where x.age between ?1 and ?2
+LessThan 	findByAgeLessThan 	...  where x.age  <  ?1
+GreaterThan 	findByAgeGreaterThan 	...  where x.age > ?1
+After/Before 	... 	...
+IsNull 	findByAgeIsNull 	...  where x.age is null
+
+2.JpaRepository相关查询功能
+
+    a.Spring Data JPA框架在进行方法名解析时，会先把方法名多余的前缀截取掉，比如find、findBy、read、readBy、get、getBy，然后对剩下部分进行解析。
+
+    b.假如创建如下的查询：findByUserDepUuid()，框架在解析该方法时，首先剔除
+    findBy，然后对剩下的属性进行解析，假设查询实体为Doc。
+
+        1：先判断userDepUuid （根据POJO 规范，首字母变为小写）是否为查询实体的一个
+
+        属性，如果是，则表示根据该属性进行查询；如果没有该属性，继续第二步；
+
+        2：从右往左截取第一个大写字母开头的字符串此处为Uuid），然后检查剩下的字符串是
+
+        否为查询实体的一个属性，如果是，则表示根据该属性进行查询；如果没有该属性，
+
+        则重复第二步，继续从右往左截取；最后假设user为查询实体的一个属性；
+
+        3：接着处理剩下部分（DepUuid），先判断user 所对应的类型是否有depUuid属性，如
+
+        果有，则表示该方法最终是根据“ Doc.user.depUuid” 的取值进行查询；否则继
+
+        续按照步骤2 的规则从右往左截取，最终表示根据“Doc.user.dep.uuid” 的值进
+
+        行查询。
+
+        4:可能会存在一种特殊情况，比如Doc包含一个user 的属性，也有一个userDep 属
+
+        性，此时会存在混淆。可以明确在属性之间加上"_" 以显式表达意图，比如
+
+        "findByUser_DepUuid()" 或者"findByUserDep_uuid()"
+
+    c.特殊的参数： 还可以直接在方法的参数上加入分页或排序的参数，比如：
+    Page<UserModel> findByName(String name, Pageable pageable);
+    List<UserModel> findByName(String name, Sort sort);
+
+    d.也可以使用JPA的NamedQueries，方法如下：
+
+        1：在实体类上使用@NamedQuery，示例如下：
+        @NamedQuery(name = "UserModel.findByAge",query = "select o from UserModel
+        o where o.age >= ?1")
+        2：在自己实现的DAO的Repository接口里面定义一个同名的方法，示例如下：
+        public List<UserModel> findByAge(int age);
+        3：然后就可以使用了，Spring会先找是否有同名的NamedQuery，如果有，那么就不
+        会按照接口定义的方法来解析。
+
+    e.还可以使用@Query来指定本地查询，只要设置nativeQuery为true，比如：
+

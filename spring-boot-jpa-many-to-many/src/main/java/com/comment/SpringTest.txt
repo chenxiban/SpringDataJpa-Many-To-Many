@@ -1,0 +1,21 @@
+为了更好的测试，批量添加几条数据到数据库中：
+
+@SpringBootTest
+@RunWith(SpringRunner.class)
+public class UserTest {
+
+    @Autowired
+    private IUserService userService;
+
+    @Test
+    public void testAdd() {
+        for(Integer i=0; i < 5; i++) {
+            User user = new User();
+            user.setNickName("昵称"+i);
+            user.setUserName("user"+i);
+            user.setPassword("pwd"+i);
+            user.setEmail("email"+i+"@domain.com");
+            userService.save(user);
+        }
+    }
+}
